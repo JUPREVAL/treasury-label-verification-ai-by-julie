@@ -10,7 +10,6 @@ import { Upload, CheckCircle2, XCircle, AlertTriangle, Loader2, FileImage, Trash
 import { ocrImage } from '@/lib/ocr';
 import {
   verifyLabel,
-  summarize,
   GOVERNMENT_WARNING_TEXT,
   type ApplicationData,
   type FieldResult,
