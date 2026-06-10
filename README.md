@@ -1,100 +1,104 @@
-# 🏦 Treasury Label Verification AI
+Treasury Label Verification AI
+Author: Julie Preval
+GitHub: github.com/JUPREVAL/treasury-label-verification-ai-by-julie
+Live Demo: mrsjuliepreval-treasury-ai-app.lovable.app
+Project Overview
+This is a take-home prototype built for the U.S. Treasury's Alcohol and Tobacco Tax and Trade Bureau (TTB). The TTB reviews around 150,000 alcohol beverage label applications per year. Compliance agents manually check each label image against an application — verifying that the brand name, alcohol content, government warning, and other required fields are correct.
 
-> An AI-powered prototype for automated OCR extraction and intelligent comparison of treasury instrument labels — built to reduce manual verification errors and accelerate audit workflows.
+This tool automates that process. A user uploads a label image, enters the expected application data, and the app extracts text from the image using OCR, then compares it field by field and returns a clear PASS, UNCERTAIN, or FAIL result — in under 5 seconds.
 
-![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)
-![Streamlit](https://img.shields.io/badge/Streamlit-App-red?logo=streamlit&logoColor=white)
-![OpenCV](https://img.shields.io/badge/OpenCV-Image%20Processing-green?logo=opencv)
-![Tesseract](https://img.shields.io/badge/Tesseract-OCR-orange)
-![License](https://img.shields.io/badge/License-MIT-lightgrey)
-![Status](https://img.shields.io/badge/Status-Prototype-yellow)
+Why It Was Built
+The TTB compliance team described a review process that is largely manual and repetitive. Agents spend a significant portion of their day doing what amounts to data-entry verification — checking whether the number on a label matches the number on the form. With a team of 47 agents handling 150,000 applications annually, the volume is difficult to manage without automation support.
 
----
+Key pain points identified during stakeholder interviews:
 
-## 📋 Table of Contents
+Results must come back in roughly 5 seconds or agents won't use the tool — a previous scanning vendor took 30–40 seconds per label and was abandoned
+Half the team is over 50; the interface needs to be clean and obvious with no hunting for buttons
+During peak season, importers submit 200–300 applications at once; batch upload is critical
+The Government Warning Statement must be checked exactly — word for word, "GOVERNMENT WARNING:" in all caps and bold
+Features
+Upload a single label image or a batch of images
+Enter expected application data: Brand Name, Class/Type, ABV, Net Contents, Bottler/Producer, Government Warning
+OCR runs entirely in the browser — no backend, no network calls to external services
+Results display per field: ✔ Match, ⚠ Uncertain, or ❌ Mismatch
+ABV is compared with a ±0.3% tolerance (flagged as Uncertain, not a hard failure)
+Government Warning is checked word for word — must appear in ALL CAPS
+Per-label processing time is shown
+Raw OCR text is viewable for transparency
+Large, high-contrast UI designed for accessibility and non-technical users
+Tech Stack
+Layer	Technology
+Frontend	React + TypeScript
+OCR Engine	Tesseract.js (runs entirely in the browser)
+Styling	Tailwind CSS
+Hosting / Build	Lovable (deployed)
+Backend	None — all processing happens client-side
+Why no backend?
+No backend or external API calls are required. This was intentional — government network environments often block outbound traffic to cloud ML endpoints, a lesson learned from a prior vendor pilot.
 
-- [Project Overview](#project-overview)
-- [Purpose & Problem Statement](#purpose--problem-statement)
-- [Stakeholder Context](#stakeholder-context)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Setup Instructions](#setup-instructions)
-- [How to Run Locally](#how-to-run-locally)
-- [How OCR Works](#how-ocr-works)
-- [How Comparison Logic Works](#how-comparison-logic-works)
-- [Assumptions](#assumptions)
-- [Known Limitations](#known-limitations)
-- [Future Improvements](#future-improvements)
-- [Author](#author)
+How to Run Locally
+Prerequisites: Node.js 18+ and npm
 
----
+git clone https://github.com/JUPREVAL/treasury-label-verification-ai-by-julie.git
+cd treasury-label-verification-ai-by-julie
+npm install
+npm run dev
+Open http://localhost:8080 in your browser.
 
-## Project Overview
+To use the app:
+Upload one or more alcohol label images (JPG, PNG)
+Fill in the expected application fields in the form
+Click Run Verification
+Review the match results per field and per label
+How OCR Works
+This app uses Tesseract.js, a JavaScript port of the Tesseract OCR engine. It runs directly in the browser — no image is sent to a server.
 
-The **Treasury Label Verification AI** is a Python-based prototype that automates the verification of physical and digital treasury instrument labels. It ingests label images (scanned or photographed), extracts structured text data using Optical Character Recognition (OCR), and compares the extracted values against a reference dataset — surfacing mismatches, anomalies, and confidence scores in a clean, actionable report.
+When a label is uploaded:
 
-This tool was designed as an internal proof-of-concept to demonstrate how AI and computer vision can streamline treasury operations that are currently performed manually.
+The image is passed to Tesseract.js for text extraction
+The raw text output is parsed line by line to find matching fields
+Extracted values are compared against what the user entered in the application form
+Because OCR quality depends on image clarity, results may vary for labels that are photographed at angles, have glare, or are low resolution. The raw OCR output is always shown so the user can verify what was extracted.
 
----
+How Comparison Works
+Each field is compared using a different rule:
 
-## Purpose & Problem Statement
+Field	Method
+Brand Name	Fuzzy line matching
+Class / Type	Fuzzy line matching
+ABV	Numeric comparison with ±0.3% tolerance
+Net Contents	Fuzzy line matching
+Bottler / Producer	Fuzzy line matching
+Government Warning	Exact match required — ALL CAPS enforced
+Match results:
 
-Treasury teams routinely verify labels on financial instruments — such as bonds, notes, certificates of deposit, and custody receipts — to ensure that printed details (CUSIP numbers, maturity dates, face values, issuer names, interest rates, etc.) match the system of record.
+✔ Match — extracted value matches the application data
+⚠ Uncertain — close but not exact (e.g., ABV within tolerance, or low OCR confidence)
+❌ Mismatch — values do not match or field was not found
+Assumptions
+One label per image — multi-label scans are not auto-split
+The user enters the correct application data before running verification
+Image quality affects OCR accuracy — heavily glared or angled images may produce incomplete results
+The Government Warning Statement used is the standard TTB-required text
+This is a prototype; it has not been validated against a full production dataset
+Limitations
+OCR accuracy drops on poor-quality images (glare, extreme angles, very small fonts)
+No persistent storage — results are session-only and not saved between sessions
+No login or access control
+Batch processing is sequential; very large batches may be slow in older browsers
+Not connected to the COLA system or any TTB database
+Future Improvements
+Image preprocessing (deskew, contrast enhancement) to improve OCR accuracy on imperfect photos
+Audit log — save verification history with timestamps and agent ID
+Connect to COLA or an internal reference dataset to auto-populate application fields
+Role-based access control for production use
+API endpoint to allow integration with existing TTB workflows
+Improved batch performance using Web Workers for parallel processing
+Author
+Julie Preval
 
-**The manual process is:**
-- ⏳ Time-consuming — a single batch of labels can take hours to verify
-- ⚠️ Error-prone — transposition mistakes are common under deadline pressure
-- 📂 Difficult to audit — no structured log of what was checked or when
+Choose me- Julie Preval Treasury Developer
 
-**This prototype demonstrates that:**
-- OCR can reliably extract structured fields from label images
-- Rule-based and fuzzy comparison logic can flag discrepancies automatically
-- A simple UI can make this accessible to non-technical treasury staff
+github.com/JUPREVAL
 
----
-
-## Stakeholder Context
-
-| Stakeholder | Role | Interest |
-|---|---|---|
-| Treasury Operations Team | Primary users | Faster, more accurate label verification |
-| Internal Audit | Reviewers | Structured verification logs and discrepancy reports |
-| IT / Engineering | Maintainers | Clean, extensible codebase for future integration |
-| Finance Leadership | Sponsors | Risk reduction and operational efficiency |
-
-This prototype was built to serve as a demonstration for leadership and IT stakeholders, illustrating the feasibility of an AI-assisted verification workflow before committing to a full production build.
-
----
-
-## Features
-
-- 📷 **Image Upload** — Upload single or batch label images (PNG, JPG, PDF)
-- 🔍 **OCR Extraction** — Automatically extracts key fields: CUSIP, issuer name, face value, maturity date, interest rate, and settlement date
-- 📊 **Reference Comparison** — Compares extracted data against a loaded reference file (CSV or Excel)
-- ✅ **Match Scoring** — Produces a field-level confidence score and overall match status (PASS / FAIL / REVIEW)
-- 🚨 **Discrepancy Flagging** — Highlights mismatched or missing fields with color-coded indicators
-- 📁 **Export Reports** — Exports verification results as a structured CSV or Excel report
-- 🖥️ **Streamlit UI** — Clean, browser-based interface requiring no technical knowledge to operate
-- 🔄 **Batch Processing** — Supports processing multiple label images in a single session
-
----
-
-## Tech Stack
-
-| Layer | Technology | Purpose |
-|---|---|---|
-| Language | Python 3.10+ | Core application logic |
-| UI Framework | Streamlit | Interactive web-based front end |
-| OCR Engine | Tesseract OCR (via `pytesseract`) | Text extraction from images |
-| Image Preprocessing | OpenCV (`cv2`) | Deskewing, thresholding, noise removal |
-| Data Handling | Pandas | Reference data loading and comparison |
-| Fuzzy Matching | `rapidfuzz` | Tolerant string comparison for names/issuers |
-| File Parsing | Pillow (PIL) | Image format handling |
-| Export | `openpyxl` / `xlsxwriter` | Excel report generation |
-| Environment Mgmt | `python-dotenv` | Secrets and config management |
-
----
-
-## Project Structure
-
+Prototype built as part of a TTB take-home assessment. Not intended for production use without further validation and security review.
